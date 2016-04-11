@@ -43,24 +43,10 @@ vector<string> split(const string &text, char sep) {
     return tokens;
 }
 
-void execute(string name, bool last, bool first) {
+void execute(string name) {
     pid_t  pid;
     int    status;
-    
-    int fd = open("output_file", O_RDONLY, 0666);
-    
-    int stdin_copy = dup(0);
-    int stdout_copy = dup(1);
-    if(!first) {
-        dup2(fd, STDIN_FILENO);
-    }
-    remove("output_file");
-    fd = open("output_file", O_WRONLY|O_CREAT, 0666);
-    if (!last) {
-        dup2(fd, STDOUT_FILENO);
-    }
-    close(fd);
-    
+
     if ((pid = fork()) < 0) {
         printf("*** ERROR: forking child process failed\n");
     } else {
@@ -72,8 +58,6 @@ void execute(string name, bool last, bool first) {
         } else {
             current_pid = pid;
             waitpid(pid, &status, 0);
-            dup2(stdin_copy, 0);
-            dup2(stdout_copy, 1);
             current_pid = -1;
         }
     }
@@ -103,15 +87,7 @@ int main() {
         vector<string> comands = split(input_string, '|');
         
         for(auto comand = comands.begin(); comand != comands.end(); ++comand) {
-            bool last = false;
-            bool first = false;
-            if(comand == comands.begin()) {
-                first = true;
-            }
-            if(comand == --comands.end()) {
-                last = true;
-            }
-            execute(*comand, last, first);
+            execute(*comand);
         }
     } while(input_string != "");
 }
